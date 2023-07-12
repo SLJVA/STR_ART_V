@@ -29,5 +29,11 @@
                Stretch="Uniform"
                Source="{Binding ProcessedImage}"/>
 
+        <Button Content="Save Image"
+                HorizontalAlignment="Right"
+                Margin="0,10,10,10" 
+                Padding="10"
+                Command="{Binding SaveImageCommand}" />
+
     </Grid>
 </Window>

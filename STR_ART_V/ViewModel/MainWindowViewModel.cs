@@ -18,10 +18,13 @@ namespace STR_ART_V.ViewModel
     {
         public MainWindowViewModel()
         {
-            LoadImageCommand = new RelayCommand(LoadImage, CanLoadImage); 
+            LoadImageCommand = new RelayCommand(LoadImage, CanLoadImage);
+            SaveImageCommand = new RelayCommand(SaveImage, CanSaveImage);
         }
 
         public IRelayCommand LoadImageCommand { get; }
+
+        public IRelayCommand SaveImageCommand { get; }
 
         [ObservableProperty]
         private string _redPixelCount = string.Empty;
@@ -29,21 +32,36 @@ namespace STR_ART_V.ViewModel
         [ObservableProperty]
         private ImageSource? _processedImage;
 
+        [ObservableProperty]
+        public string _imagePath;
+
+        //to sie wywoluje gdy wlasciwosc ImagePath zmienia wartosc, sprawdza to czy komenda sie moze wykonac, metoda => (CanSaveImage)
+        partial void OnImagePathChanged(string value)
+        {
+            SaveImageCommand.NotifyCanExecuteChanged();
+        }
+
         partial void OnRedPixelCountChanged(string value)
         {
             LoadImageCommand.NotifyCanExecuteChanged();
         }
 
+        //to sie wywoluje gdy wlasciwosc ProccessedImage zmienia wartosc, sprawdza to czy komenda sie moze wykonac, metoda => (CanSaveImage)
+        partial void OnProcessedImageChanged(ImageSource? value)
+        {
+            SaveImageCommand.NotifyCanExecuteChanged();
+        }
+
         private void LoadImage()
         {
-            var imagePath = FileDialogUtilities.OpenImageFile();
+            ImagePath = FileDialogUtilities.OpenImageFile();
 
-            if(imagePath is null)
+            if(ImagePath is null)
             {
                 return;
             }
 
-            var bitmap = ImageUtilities.CreateBitmap(imagePath);
+            var bitmap = ImageUtilities.CreateBitmap(ImagePath);
 
             //Powiększenie obrazu do rozmiaru 3000x3000
             var resizedImage = ImageUtilities.ResizeImage(bitmap, 3000, 3000);
@@ -76,17 +94,38 @@ namespace STR_ART_V.ViewModel
 
             //Wyświetlenie przetworzonego obrazu
             ProcessedImage = processedImage;
-
-            //Zapisanie obrazu do pliku
-            SystemUtilities.SaveImage(imagePath, processedImage);
+ 
         }
-
         private bool CanLoadImage()
         {
             if (SystemUtilities.ParseStringToInt(RedPixelCount) is null)
             {
                 return false;
             }
+
+            return true;
+        }
+
+        private void SaveImage()
+        {
+            //sprawdzam warunek jeszcze raz, zeby nie bylo warningow
+            if (string.IsNullOrEmpty(ImagePath) || ProcessedImage is null)
+            {
+                return;
+            }
+
+            //Zapisanie obrazu do pliku
+            SystemUtilities.SaveImage(ImagePath, (BitmapSource)ProcessedImage);
+        }
+
+        //logika sprawdzania, czy mozna zapisac zdjecie
+        private bool CanSaveImage()
+        {
+            // jezeli sciezka nie istnieje lub zdjecie nie istnieje, to przycisk zapisu bedzie nieaktywny
+            if (string.IsNullOrEmpty(ImagePath) || ProcessedImage is null)
+            {
+                return false;
+            }            
 
             return true;
         }
