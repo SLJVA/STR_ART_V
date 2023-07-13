@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.IO;
 
 namespace STR_ART_V.Model
 {
@@ -44,13 +45,20 @@ namespace STR_ART_V.Model
             return edgeImage;
         }
 
-        public static BitmapSource ApplyRedPixels(BitmapSource image, int redPixelCount)
+        public static BitmapSource ApplyRedPixels(BitmapSource image, int redPixelCount, string ImagePath)
         {
             int width = image.PixelWidth;
             int height = image.PixelHeight;
 
+            var directoryName = Path.GetDirectoryName(ImagePath);
+            string newImagePath = Path.Combine(directoryName, "red_pixels.txt" );
+            
+
             // Pobierz współrzędne białych pikseli
             List<(int x, int y)> whitePixelCoordinates = GetWhitePixelCoordinates(image);
+
+            // Lista przechowująca pozycje czerwonych pikseli
+            List<(int x, int y)> redPixelCoordinates = new List<(int x, int y)>();
 
             if (redPixelCount > whitePixelCoordinates.Count)
             {
@@ -88,8 +96,14 @@ namespace STR_ART_V.Model
 
                     // Nanieś czerwony piksel
                     drawingContext.DrawRectangle(Brushes.Red, null, new Rect(x, y, 1, 1));
-                    count++;
 
+                    // Dodaj pozycję czerwonego piksela do listy
+                    redPixelCoordinates.Add((x, y));
+
+                    // Zapisz pozycje czerwonych pikseli do pliku
+                    SaveRedPixelCoordinatesToFile(redPixelCoordinates, newImagePath);
+
+                    count++;
                     position += 1;
 
                     // Jeśli przekroczono liczbę czerwonych pikseli lub nie ma już dostępnych białych pikseli, przerwij pętlę
@@ -123,6 +137,21 @@ namespace STR_ART_V.Model
             }
 
             return whitePixelCoordinates;
+        }
+
+        private static void SaveRedPixelCoordinatesToFile(List<(int x, int y)> redPxelCoordinates, string newImagePath)
+        {
+            //Scieżka pliku
+            string filePath = newImagePath;
+
+            //Zapisanie pozycji czerwonych pikseli do pliku
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                foreach ((int x, int y) in redPxelCoordinates)
+                {
+                    writer.WriteLine($"{x}, {y}");
+                }
+            }
         }
     }
 }

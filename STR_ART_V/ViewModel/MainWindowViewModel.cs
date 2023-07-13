@@ -80,7 +80,7 @@ namespace STR_ART_V.ViewModel
             BitmapSource? processedImage = null;
             try
             {
-                processedImage = ImageUtilities.ApplyRedPixels(edgeImage, redPixelCount.Value);
+                processedImage = ImageUtilities.ApplyRedPixels(edgeImage, redPixelCount.Value, ImagePath);
             }
             catch(ArgumentException)
             {
